@@ -1,0 +1,118 @@
+---
+- name: Déployer la base de données MySQL
+  hosts: db_server
+  become: yes
+  tasks:
+    - name: Mettre à jour les paquets
+      apt:
+        update_cache: yes
+
+    - name: Installer les dépendances nécessaires
+      apt:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-requests
+        state: present
+
+    - name: Ajouter la clé GPG de Docker
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+
+    - name: Ajouter le dépôt Docker
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+        echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+      become: yes
+
+    - name: Mettre à jour les sources de paquets
+      apt:
+        update_cache: yes
+
+    - name: Installer Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Démarrer et activer le service Docker
+      command: docker --version
+      register: docker_version
+      failed_when: docker_version.rc != 0
+
+    - name: Télécharger l'image Docker MySQL
+      docker_image:
+        name: gwenael9/tp-database:latest
+        source: pull
+
+    - name: Démarrer le conteneur MySQL
+      docker_container:
+        name: tp-mysql
+        image: gwenael9/tp-database:latest
+        state: started
+        ports:
+          - "3306:3306"
+        env:
+          MYSQL_ROOT_PASSWORD: "root"
+        volumes:
+          - database_data:/var/lib/mysql
+
+- name: Déployer l'application PHP
+  hosts: app_server
+  become: yes
+  tasks:
+    - name: Mettre à jour les paquets
+      apt:
+        update_cache: yes
+
+    - name: Installer les dépendances nécessaires
+      apt:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-requests
+        state: present
+
+    - name: Ajouter la clé GPG de Docker
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+
+    - name: Ajouter le dépôt Docker
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+        echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+      become: yes
+      
+    - name: Mettre à jour les sources de paquets
+      apt:
+        update_cache: yes
+
+    - name: Installer Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Démarrer et activer le service Docker
+      command: docker --version
+      register: docker_version
+      failed_when: docker_version.rc != 0
+
+    - name: Télécharger l'image Docker PHP
+      docker_image:
+        name: gwenael9/tp-php:latest
+        source: pull
+
+    - name: Démarrer le conteneur PHP
+      docker_container:
+        name: tp-php
+        image: gwenael9/tp-php:latest
+        state: started
+        ports:
+          - "8080:80"
+        env:
+          DB_HOST: "192.168.1.146"
+          DB_USER: "root"
+          DB_NAME: "gestion_produits"
+          DB_PASSWORD: "root"
+          DB_PORT: "3306"

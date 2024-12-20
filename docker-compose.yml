@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  front:
+    build: ./php
+    image: tp-devops/tp-php:latest
+    ports:
+      - 8080:80
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_NAME=gestion_produits
+      - DB_PASSWORD=root
+      - DB_PORT=3306
+    depends_on:
+      - db
+
+  db:
+    build: ./database
+    image: tp-devops/tp-database:latest
+    restart: unless-stopped
+    environment: 
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - database_data:/var/lib/mysql
+
+volumes:
+  database_data:
+

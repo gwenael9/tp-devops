@@ -19,3 +19,10 @@ L'application permet de :
 - Modifier les produits
 - Supprimer les produits
 - Pour chaque produit, il est possible d'ajouter autant de photos que nécessaire
+
+# ip docker ubuntu
+
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ubuntu_host1
+
+172.17.0.2
+172.17.0.3

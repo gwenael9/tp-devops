@@ -1,0 +1,13 @@
+# lancer le projet en local
+
+docker compose up --build
+
+# push images sur dockerhub
+
+docker login
+
+docker tag tp-devops/tp-php:latest gwenael9/tp-php:latest
+docker tag tp-devops/tp-database:latest gwenael9/tp-database:latest
+
+docker push gwenael9/tp-php:latest
+docker push gwenael9/tp-database:latest
